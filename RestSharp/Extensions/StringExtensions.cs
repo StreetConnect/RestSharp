@@ -43,16 +43,30 @@ namespace RestSharp.Extensions
 			return HttpUtility.UrlDecode(input);
 		}
 
-		/// <summary>
-		/// Uses Uri.EscapeDataString() based on recommendations on MSDN
-		/// http://blogs.msdn.com/b/yangxind/archive/2006/11/09/don-t-use-net-system-uri-unescapedatastring-in-url-decoding.aspx
-		/// </summary>
-		public static string UrlEncode(this string input)
-		{
-			return Uri.EscapeDataString(input);
-		}
+        /// <summary>
+        /// Uses Uri.EscapeDataString() based on recommendations on MSDN
+        /// http://blogs.msdn.com/b/yangxind/archive/2006/11/09/don-t-use-net-system-uri-unescapedatastring-in-url-decoding.aspx
+        /// </summary>
+        public static string UrlEncode(this string input)
+        {
+            const int maxLength = 30000;
+            if (input.Length <= maxLength)
+                return Uri.EscapeDataString(input);
 
-		public static string HtmlDecode(this string input)
+            var sb = new StringBuilder(input.Length*2);
+            var index = 0;
+            while (index < input.Length)
+            {
+                var length = Math.Min(input.Length - index, maxLength);
+                var subString = input.Substring(index, length);
+                sb.Append(Uri.EscapeDataString(subString));
+                index += subString.Length;
+            }
+
+            return sb.ToString();
+        }
+
+	    public static string HtmlDecode(this string input)
 		{
 			return HttpUtility.HtmlDecode(input);
 		}
